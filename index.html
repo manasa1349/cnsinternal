@@ -1,295 +1,217 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Cryptography Programs</title>
+    <title>Docker on AWS Guide</title>
 </head>
-
 <body>
 
-<h1>Cryptography Lab Programs</h1>
-
-<script>
-function copyCode(btn) {
-    const code = btn.nextElementSibling.innerText.trim();
-    navigator.clipboard.writeText(code);
-    btn.innerText = "Copied!";
-}
-</script>
-
-<div>
-<h2>1. DES Algorithm</h2>
-<button onclick="copyCode(this)">Copy</button>
-<pre><code>import java.util.Base64;
-import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.DESKeySpec;
-
-public class DESAlgorithm {
-
-    // DES requires 8-byte (64-bit) key
-    private static final String KEY = "ABCDEFGH";
-
-    public static void main(String[] args) throws Exception {
-
-        String text = "Welcome";
-
-        // Generate DES secret key from given string
-        SecretKeyFactory factory = SecretKeyFactory.getInstance("DES");
-        SecretKey key = factory.generateSecret(new DESKeySpec(KEY.getBytes()));
-
-        // Create cipher instance for DES
-        Cipher cipher = Cipher.getInstance("DES");
-
-        // Encrypt the plaintext
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-        byte[] encrypted = cipher.doFinal(text.getBytes());
-
-        // Convert encrypted bytes to readable format
-        String enc = Base64.getEncoder().encodeToString(encrypted);
-
-        // Decrypt back to original text
-        cipher.init(Cipher.DECRYPT_MODE, key);
-        byte[] decrypted = cipher.doFinal(Base64.getDecoder().decode(enc));
-
-        System.out.println("Original: " + text);
-        System.out.println("Encrypted: " + enc);
-        System.out.println("Decrypted: " + new String(decrypted));
-    }
-}</code></pre>
-</div>
-
-<div>
-<h2>2. AES Algorithm</h2>
-<button onclick="copyCode(this)">Copy</button>
-<pre><code>import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
-public class AESExample {
-
-    // Convert byte array to hexadecimal string for readable output
-    public static String toHex(byte[] data) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : data) {
-            sb.append(String.format("%02X", b));
-        }
-        return sb.toString();
-    }
-
-    public static void main(String[] args) throws Exception {
-
-        String message = "Cryptography Lab";
-
-        // Generate 128-bit AES secret key
-        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(128);
-        SecretKey key = keyGen.generateKey();
-
-        // Convert generated key into AES-compatible key specification
-        SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
-
-        // Create cipher instance for AES algorithm
-        Cipher cipher = Cipher.getInstance("AES");
-
-        // Encrypt the message using AES key
-        cipher.init(Cipher.ENCRYPT_MODE, keySpec);
-        byte[] encrypted = cipher.doFinal(message.getBytes());
-
-        // Decrypt the encrypted data using same key
-        cipher.init(Cipher.DECRYPT_MODE, keySpec);
-        byte[] decrypted = cipher.doFinal(encrypted);
-
-        System.out.println("Original: " + message);
-        System.out.println("Encrypted: " + toHex(encrypted));
-        System.out.println("Decrypted: " + new String(decrypted));
-    }
-}</code></pre>
-</div>
+<h1>🚀 DOCKER ON AWS – FULL EXECUTION GUIDE</h1>
+
+<h2>🔹 PART 1 – CREATE INSTANCE</h2>
+<p>Go to AWS → EC2 → Launch Instance</p>
+<ul>
+<li>Name → docker-lab</li>
+<li>OS → Amazon Linux / Ubuntu</li>
+<li>Instance → t2.micro</li>
+<li>Key pair → create/download</li>
+</ul>
+
+<h2>🔹 PART 2 – SECURITY SETTINGS</h2>
+<ul>
+<li>SSH → port 22</li>
+<li>HTTP → port 80</li>
+</ul>
+
+<h2>🔹 PART 3 – LAUNCH & CONNECT</h2>
+<p>Use EC2 Instance Connect</p>
+
+<h2>🔹 PART 4 – INSTALL DOCKER</h2>
+<pre>
+sudo dnf update -y
+sudo dnf install docker -y
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ec2-user
+exit
+</pre>
+
+<h2>🔹 PART 5 – CREATE PROJECT</h2>
+<pre>
+cd ~
+mkdir docker-project
+cd docker-project
+</pre>
+
+<h2>🔹 PART 6 – CREATE WEBPAGE</h2>
+<pre>
+nano index.html
+</pre>
+
+<p>&lt;h1&gt;Docker Working on AWS 🚀&lt;/h1&gt;</p>
+
+<h2>🔹 PART 7 – RUN DOCKER</h2>
+<pre>
+docker pull httpd
+docker run -d -p 80:80 -v $(pwd):/usr/local/apache2/htdocs/ httpd
+</pre>
+
+<h2>🔹 PART 8 – VERIFY</h2>
+<pre>
+docker ps
+</pre>
+
+<h2>🔹 PART 9 – ACCESS WEBSITE</h2>
+<p>http://your-public-ip</p>
+
+<h2>⚠️ COMMON ERRORS</h2>
+<ul>
+<li>apt not found → use dnf</li>
+<li>Port 80 not open</li>
+<li>Wrong IP</li>
+</ul>
+
+<h2>🔹 EXTRA COMMANDS</h2>
+<pre>
+docker ps -a
+docker rm -f &lt;container_id&gt;
+
+docker ps -a
+docker rm -f $(docker ps -aq)
+docker run -d -p 80:80 -v $(pwd):/usr/local/apache2/htdocs/ httpd
+</pre>
+
+
+<hr>
+
+<h1>🚀 WEEK 5 (WINDOWS + IIS) — FULL EXECUTION GUIDE</h1>
+
+<p><b>This is your personal checklist (use anytime)</b></p>
+
+<hr>
+
+<h2>🔹 PART 1 – CREATE INSTANCE</h2>
+<ol>
+<li>Go to AWS → EC2</li>
+<li>Click Launch Instance</li>
+</ol>
+
+<ul>
+<li>Name → Week5-Server</li>
+<li>OS → Microsoft Windows Server</li>
+<li>Instance → t3.micro</li>
+<li>Key pair → create/download</li>
+</ul>
+
+<hr>
+
+<h2>🔹 PART 2 – SECURITY GROUP</h2>
+<ul>
+<li>RDP → port 3389</li>
+<li>HTTP → port 80</li>
+</ul>
 
-<div>
-<h2>3. RSA Algorithm</h2>
-<button onclick="copyCode(this)">Copy</button>
-<pre><code>import java.math.BigInteger;
-import java.util.Scanner;
+<hr>
 
-public class RSA {
+<h2>🔹 PART 3 – LAUNCH</h2>
+<ul>
+<li>Status = Running</li>
+<li>Checks = 2/2 or 3/3</li>
+</ul>
 
-    public static void main(String[] args) {
+<hr>
 
-        Scanner sc = new Scanner(System.in);
+<h2>🔹 PART 4 – CONNECT (RDP)</h2>
+<ol>
+<li>Select instance</li>
+<li>Click Connect</li>
+<li>Go to RDP Client tab</li>
+</ol>
 
-        // Input two prime numbers
-        System.out.print("Enter prime p: ");
-        BigInteger p = sc.nextBigInteger();
+<ol>
+<li>Download RDP file</li>
+<li>Get Password</li>
+<li>Upload .pem</li>
+<li>Decrypt Password</li>
+<li>Copy password</li>
+</ol>
 
-        System.out.print("Enter prime q: ");
-        BigInteger q = sc.nextBigInteger();
+<pre>
+Username: Administrator
+</pre>
 
-        // Compute modulus n = p * q
-        BigInteger n = p.multiply(q);
+<hr>
 
-        // Compute Euler's totient φ(n) = (p−1)(q−1)
-        BigInteger phi = (p.subtract(BigInteger.ONE))
-                          .multiply(q.subtract(BigInteger.ONE));
+<h2>🔹 PART 5 – INSTALL IIS</h2>
+<ol>
+<li>Open Server Manager</li>
+<li>Add Roles and Features</li>
+<li>Select Web Server (IIS)</li>
+</ol>
 
-        // Choose public exponent e such that gcd(e, φ) = 1
-        BigInteger e = new BigInteger("3");
-        while (!phi.gcd(e).equals(BigInteger.ONE)) {
-            e = e.add(BigInteger.TWO);
-        }
-
-        // Compute private key d (modular inverse of e)
-        BigInteger d = e.modInverse(phi);
+<hr>
 
-        // Display public and private keys
-        System.out.println("Public Key (e, n): " + e + ", " + n);
-        System.out.println("Private Key (d, n): " + d + ", " + n);
-    }
-}</code></pre>
-</div>
-
-<div>
-<h2>4. SHA-1 Hashing</h2>
-<button onclick="copyCode(this)">Copy</button>
-<pre><code>import java.security.MessageDigest;
-import java.util.HexFormat;
-
-public class SHA1Example {
-
-    // Convert byte array to hexadecimal (manual method - not used here)
-    public static String toHex(byte[] data) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : data) {
-            sb.append(String.format("%02X", b));
-        }
-        return sb.toString();
-    }
-
-    public static void main(String[] args) throws Exception {
-
-        // Create MessageDigest instance for SHA-1 algorithm
-        MessageDigest md = MessageDigest.getInstance("SHA-1");
-
-        String input = "Hello World";
-
-        // Feed input data to hashing algorithm
-        md.update(input.getBytes());
-
-        // Generate hash (160-bit output)
-        byte[] hash = md.digest();
-
-        // Convert hash to hexadecimal using built-in method (Java 17+)
-        String hex = HexFormat.of().formatHex(hash);
-
-        System.out.println("Input: " + input);
-        System.out.println(hex);
-    }
-}</code></pre>
-</div>
-
-<div>
-<h2>5. CaesarCipher</h2>
-<button onclick="copyCode(this)">Copy</button>
-<pre><code>import java.util.Scanner;
-
-public class CaesarCipher {
-
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-
-        System.out.print("Enter any String: ");
-        String str = sc.nextLine();
-
-        System.out.print("Enter the Key: ");
-        int key = sc.nextInt();
-
-        String encrypted = encrypt(str, key);
-        System.out.println("Encrypted String: " + encrypted);
-
-        String decrypted = decrypt(encrypted, key);
-        System.out.println("Decrypted String: " + decrypted);
-    }
-
-    public static String encrypt(String str, int key) {
-        String result = "";
-
-        for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-
-            if (Character.isUpperCase(c)) {
-                c = (char) (c + key);
-                if (c > 'Z')
-                    c = (char) (c - 26);
-            } else if (Character.isLowerCase(c)) {
-                c = (char) (c + key);
-                if (c > 'z')
-                    c = (char) (c - 26);
-            }
-
-            result += c;
-        }
-        return result;
-    }
-
-    // public static String decrypt(String text, int key) {
-    //     return encrypt(text, 26 - key); // reverse logic
-    // }
-    
-    public static String decrypt(String str, int key) {
-        String result = "";
-
-        for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-
-            if (Character.isUpperCase(c)) {
-                c = (char) (c - key);
-                if (c < 'A')
-                    c = (char) (c + 26);
-            } else if (Character.isLowerCase(c)) {
-                c = (char) (c - key);
-                if (c < 'a')
-                    c = (char) (c + 26);
-            }
-
-            result += c;
-        }
-        return result;
-    }
-}</code></pre>
-</div>
-
-<div>
-<h2>6. OrAndXor</h2>
-<button onclick="copyCode(this)">Copy</button>
-<pre><code>#include <stdio.h>
-#include <string.h>
-
-int main() {
-    char str[] = "Hello World";
-    int i, len = strlen(str);
-
-    // AND Operation
-    printf("AND Operation:\n");
-    for(i = 0; i < len; i++) {
-        printf("%c", str[i] & 127);
-    }
-
-    printf("\n\nOR Operation:\n");
-    for(i = 0; i < len; i++) {
-        printf("%c", str[i] | 127);
-    }
-
-    printf("\n\nXOR Operation:\n");
-    for(i = 0; i < len; i++) {
-        printf("%c", str[i] ^ 127);
-    }
-
-    return 0;
-}</code></pre>
-</div>
+<h2>🔹 PART 6 – GO TO WEBSITE FOLDER</h2>
+<pre>
+cd C:\inetpub\wwwroot
+</pre>
 
+<hr>
+
+<h2>🔹 PART 7 – DELETE DEFAULT FILES</h2>
+<pre>
+del *.*
+</pre>
+
+<hr>
+
+<h2>🔹 PART 8 – CREATE YOUR PAGE</h2>
+<pre>
+echo ^<h1^>Week 5 IIS Server Working 🚀^</h1^> > index.html
+</pre>
+
+<hr>
+
+<h2>🔹 PART 9 – RESTART IIS</h2>
+<pre>
+iisreset
+</pre>
+
+<hr>
+
+<h2>🔹 PART 10 – CHECK SECURITY GROUP</h2>
+<table border="1">
+<tr><th>Type</th><th>Port</th><th>Source</th></tr>
+<tr><td>HTTP</td><td>80</td><td>0.0.0.0/0</td></tr>
+</table>
+
+<hr>
+
+<h2>🔹 PART 11 – GET IP</h2>
+<p>Go to EC2 → Instances → Copy Public IPv4</p>
+
+<pre>
+http://your-public-ip
+</pre>
+
+<hr>
+
+<h2>🔹 FINAL OUTPUT</h2>
+<pre>
+Week 5 IIS Server Working 🚀
+</pre>
+
+<hr>
+
+<h2>⚠️ COMMON ERRORS</h2>
+<ul>
+<li>Port 80 not open</li>
+<li>IIS not restarted</li>
+<li>Wrong IP</li>
+</ul>
+
+<hr>
+
+<h2>🧠 MEMORY TRICK</h2>
+<p><b>EC2 → RDP → IIS → HTML → IP</b></p> 
 </body>
 </html>
