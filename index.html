@@ -1,445 +1,733 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Docker on AWS Guide</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Docker & IIS on AWS – Full Guide</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1e2530;
+      --border: #30363d;
+      --accent: #f78166;
+      --accent2: #58a6ff;
+      --accent3: #3fb950;
+      --accent4: #d2a8ff;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --warn: #e3b341;
+      --code-bg: #0d1117;
+      --radius: 10px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 60%);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 40px 36px;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(88,166,255,0.12) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -40px; left: 30%;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(247,129,102,0.08) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(88,166,255,0.1);
+      border: 1px solid rgba(88,166,255,0.3);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      color: var(--accent2);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    header h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1px;
+    }
+    header h1 span { color: var(--accent2); }
+    header p {
+      color: var(--muted);
+      margin-top: 10px;
+      font-size: 15px;
+      max-width: 600px;
+    }
+
+    /* NAV TABS */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      padding: 20px 40px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: var(--accent2);
+      border-bottom-color: var(--accent2);
+    }
+
+    /* LAYOUT */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* PART HEADING */
+    .part {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 40px 0 18px;
+    }
+    .part-num {
+      background: var(--accent2);
+      color: #0d1117;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .part h2 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    /* STEP CARDS */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      transition: border-color 0.2s;
+    }
+    .step:hover { border-color: rgba(88,166,255,0.35); }
+    .step-num {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      min-width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    .step-content { flex: 1; font-size: 15px; }
+    .step-content strong { color: var(--accent2); font-weight: 700; }
+
+    /* CODE BLOCK */
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 12px 0;
+      overflow: hidden;
+    }
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .code-lang {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'Courier New', Courier, monospace;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .copy-btn:hover {
+      background: rgba(88,166,255,0.1);
+      color: var(--accent2);
+      border-color: var(--accent2);
+    }
+    .copy-btn.copied {
+      background: rgba(63,185,80,0.1);
+      color: var(--accent3);
+      border-color: var(--accent3);
+    }
+    pre {
+      padding: 16px 18px;
+      overflow-x: auto;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #c9d1d9;
+    }
+    pre .c { color: var(--accent2); } /* commands */
+    pre .f { color: var(--accent3); } /* flags */
+    pre .s { color: #a5d6ff; }        /* strings */
+
+    /* NOTE / WARNING / KEYMAP */
+    .note {
+      background: rgba(88,166,255,0.07);
+      border-left: 3px solid var(--accent2);
+      border-radius: 0 8px 8px 0;
+      padding: 12px 16px;
+      font-size: 14px;
+      margin: 10px 0;
+      color: #c0d3f0;
+    }
+    .warn-block {
+      background: rgba(227,179,65,0.07);
+      border-left: 3px solid var(--warn);
+      border-radius: 0 8px 8px 0;
+      padding: 12px 16px;
+      font-size: 14px;
+      margin: 10px 0;
+      color: #f0dea0;
+    }
+
+    /* ERRORS SECTION */
+    .error-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 14px 0;
+      overflow: hidden;
+    }
+    .error-title {
+      background: rgba(247,129,102,0.1);
+      border-bottom: 1px solid rgba(247,129,102,0.2);
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .error-body {
+      padding: 12px 16px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .error-body strong { color: var(--text); }
+
+    /* TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin: 12px 0;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+    .tag-green { color: var(--accent3); font-weight: 700; }
+    .tag-blue  { color: var(--accent2); }
+
+    /* INLINE CODE */
+    code {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      color: #a5d6ff;
+    }
+
+    /* RESULT BOX */
+    .result-box {
+      background: linear-gradient(135deg, rgba(63,185,80,0.08), rgba(63,185,80,0.03));
+      border: 1px solid rgba(63,185,80,0.3);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent3);
+      margin: 20px 0;
+    }
+
+    /* DIVIDER */
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 36px 0;
+    }
+
+    /* MEMORY BOX */
+    .memory {
+      background: linear-gradient(135deg, rgba(210,168,255,0.08), rgba(88,166,255,0.05));
+      border: 1px solid rgba(210,168,255,0.25);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent4);
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    @media (max-width: 600px) {
+      header { padding: 32px 20px 24px; }
+      .tab-bar { padding: 16px 16px 0; }
+      .container { padding: 28px 16px 60px; }
+    }
+  </style>
 </head>
 <body>
 
+<header>
+  <div class="header-badge">☁️ AWS Execution Guide</div>
+  <h1>Docker &amp; IIS on <span>AWS EC2</span></h1>
+  <p>Step-by-step, no-theory execution guides. Follow once, works every time.</p>
+</header>
 
-Perfect — this is exactly what you need 👍
-I’ll give you a **clean, repeatable execution guide** (no theory, just doing).
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('docker', this)">🐳 Docker on AWS (Linux)</button>
+  <button class="tab-btn" onclick="switchTab('iis', this)">🪟 IIS on AWS (Windows)</button>
+</div>
 
-👉 You can follow this anytime and it will work.
+<!-- =============================== DOCKER SECTION =============================== -->
+<div class="container">
+<div id="docker" class="section active">
 
----
+  <!-- PART 1 -->
+  <div class="part"><span class="part-num">PART 1</span><h2>Create Instance</h2></div>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-content">Go to <strong>AWS → EC2</strong></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-content">Click <strong>Launch Instance</strong></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-content">
+      Set the following:
+      <ul style="margin-top:8px;padding-left:20px;color:var(--muted);font-size:14px;line-height:2">
+        <li><strong>Name</strong> → anything (e.g., <code>docker-lab</code>)</li>
+        <li><strong>OS</strong> → Amazon Linux (or Ubuntu)</li>
+        <li><strong>Instance type</strong> → <code>t2.micro</code></li>
+        <li><strong>Key pair</strong> → create / download</li>
+      </ul>
+    </div></div>
+  </div>
 
-# 🚀 DOCKER ON AWS – FULL EXECUTION GUIDE (STEP-BY-STEP)
+  <!-- PART 2 -->
+  <div class="part"><span class="part-num">PART 2</span><h2>Security Settings</h2></div>
+  <p style="color:var(--muted);font-size:14px;margin-bottom:12px;">In <strong>Network settings → Security group</strong>, add these inbound rules:</p>
+  <table>
+    <tr><th>Type</th><th>Port</th><th>Note</th></tr>
+    <tr><td class="tag-blue">SSH</td><td>22</td><td>Default</td></tr>
+    <tr><td class="tag-green">HTTP</td><td>80</td><td>⚠️ IMPORTANT</td></tr>
+  </table>
+  <div class="warn-block">If you missed HTTP port 80: <strong>Security Groups → Edit inbound rules → Add HTTP (80)</strong></div>
 
----
+  <!-- PART 3 -->
+  <div class="part"><span class="part-num">PART 3</span><h2>Launch &amp; Connect</h2></div>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-content">Click <strong>Launch Instance</strong></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-content">Go to <strong>Instances</strong> and select your instance</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-content">Click <strong>Connect → EC2 Instance Connect → Connect</strong></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-content">✅ Terminal opens in browser</div></div>
+  </div>
 
-# 🔹 PART 1 – CREATE INSTANCE
+  <!-- PART 4 -->
+  <div class="part"><span class="part-num">PART 4</span><h2>Install Docker (Amazon Linux)</h2></div>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>sudo dnf update -y
+sudo dnf install docker -y</pre>
+  </div>
+  <p style="margin:12px 0 6px;font-size:14px;color:var(--muted);">Start and enable Docker:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>sudo systemctl start docker
+sudo systemctl enable docker</pre>
+  </div>
+  <p style="margin:12px 0 6px;font-size:14px;color:var(--muted);">Give your user Docker permissions:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>sudo usermod -aG docker ec2-user</pre>
+  </div>
+  <div class="note">After running the above, type <code>exit</code> and <strong>reconnect</strong> for permissions to take effect.</div>
 
-1. Go to **AWS → EC2**
-2. Click **Launch Instance**
-
-Set:
-
-* Name → anything (e.g., docker-lab)
-* OS → **Amazon Linux (or Ubuntu)**
-* Instance type → `t2.micro`
-* Key pair → create/download
-
----
-
-# 🔹 PART 2 – SECURITY SETTINGS
-
-In **Network settings → Security group**:
-
-Add:
-
-* SSH → port 22 (default)
-* HTTP → port 80 (IMPORTANT)
-
-If missed:
-👉 Later → Security Groups → Edit inbound rules → add HTTP (80)
-
----
-
-# 🔹 PART 3 – LAUNCH & CONNECT
-
-1. Click **Launch Instance**
-2. Go to **Instances**
-3. Select instance
-4. Click **Connect**
-5. Use:
-   👉 **EC2 Instance Connect**
-6. Click **Connect**
-
-👉 Terminal opens
-
----
-
-# 🔹 PART 4 – INSTALL DOCKER (AMAZON LINUX)
-
-```bash
-sudo dnf update -y
-sudo dnf install docker -y
-```
-
-Start docker:
-
-```bash
-sudo systemctl start docker
-sudo systemctl enable docker
-```
-
-Give permission:
-
-```bash
-sudo usermod -aG docker ec2-user
-```
-
-Then:
-
-```bash
-exit
-```
-
-👉 Reconnect again
-
----
-
-# 🔹 PART 5 – CREATE PROJECT
-
-```bash
-cd ~
+  <!-- PART 5 -->
+  <div class="part"><span class="part-num">PART 5</span><h2>Create Project</h2></div>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>cd ~
 mkdir docker-project
-cd docker-project
-```
+cd docker-project</pre>
+  </div>
+
+  <!-- PART 6 -->
+  <div class="part"><span class="part-num">PART 6</span><h2>Create Webpage</h2></div>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>nano index.html</pre>
+  </div>
+  <p style="margin:12px 0 6px;font-size:14px;color:var(--muted);">Paste this inside the file:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">html</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>&lt;h1&gt;Docker Working on AWS 🚀&lt;/h1&gt;</pre>
+  </div>
+  <div class="note">Save with: <strong>Ctrl + X</strong> → <strong>Y</strong> → <strong>Enter</strong></div>
+
+  <!-- PART 7 -->
+  <div class="part"><span class="part-num">PART 7</span><h2>Run Docker</h2></div>
+  <p style="margin:0 0 8px;font-size:14px;color:var(--muted);">Pull the Apache image:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>docker pull httpd</pre>
+  </div>
+  <p style="margin:12px 0 8px;font-size:14px;color:var(--muted);">Run the container:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>docker run -d -p 80:80 -v $(pwd):/usr/local/apache2/htdocs/ httpd</pre>
+  </div>
+
+  <!-- PART 8 -->
+  <div class="part"><span class="part-num">PART 8</span><h2>Verify Container</h2></div>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>docker ps</pre>
+  </div>
+  <div class="note">You should see a running container listed in the output.</div>
+
+  <!-- PART 9 -->
+  <div class="part"><span class="part-num">PART 9</span><h2>Get Public IP</h2></div>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-content">Go to <strong>EC2 → Instances</strong></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-content">Copy the <strong>Public IPv4 address</strong> (e.g., <code>100.24.58.31</code>)</div></div>
+  </div>
+
+  <!-- PART 10 -->
+  <div class="part"><span class="part-num">PART 10</span><h2>Open Website</h2></div>
+  <p style="margin-bottom:10px;font-size:14px;color:var(--muted);">Open your browser and go to:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">url</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>http://&lt;your-public-ip&gt;</pre>
+  </div>
+
+  <div class="result-box">✅ Final Result: &nbsp; Docker Working on AWS 🚀</div>
+
+  <hr/>
+
+  <!-- CONTAINER MANAGEMENT -->
+  <div class="part"><span class="part-num">BONUS</span><h2>Container Management Commands</h2></div>
+  <p style="margin-bottom:10px;font-size:14px;color:var(--muted);">Remove a specific container and re-run:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>docker ps -a
+docker rm -f &lt;container_id&gt;
+docker run -d -p 80:80 -v $(pwd):/usr/local/apache2/htdocs/ httpd</pre>
+  </div>
+  <p style="margin:12px 0 8px;font-size:14px;color:var(--muted);">Or remove ALL containers at once:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>docker ps -a
+docker rm -f $(docker ps -aq)</pre>
+  </div>
+
+  <hr/>
+
+  <!-- ERRORS -->
+  <div class="part"><span class="part-num">⚠️</span><h2>Common Errors &amp; Fixes</h2></div>
+
+  <div class="error-card">
+    <div class="error-title">❌ apt not found</div>
+    <div class="error-body">Use <strong>dnf</strong> instead — this is Amazon Linux, not Ubuntu.<br/>
+    Replace <code>apt install</code> with <code>dnf install</code></div>
+  </div>
+
+  <div class="error-card">
+    <div class="error-title">❌ Site not opening in browser</div>
+    <div class="error-body">Check: <strong>Security group → Inbound rules → HTTP port 80 must be open (0.0.0.0/0)</strong></div>
+  </div>
+
+  <div class="error-card">
+    <div class="error-title">❌ Docker permission denied</div>
+    <div class="error-body">
+      Run the following, then <strong>exit and reconnect</strong>:
+      <div class="code-block" style="margin-top:10px">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+        <pre>sudo usermod -aG docker ec2-user
+exit</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="error-card">
+    <div class="error-title">❌ Wrong IP used</div>
+    <div class="error-body">
+      Always use the <strong>Public IPv4</strong> address.<br/>
+      ✔ <code>Public IPv4</code> &nbsp;&nbsp; ❌ <code>Private IP</code>
+    </div>
+  </div>
+
+</div><!-- end docker section -->
+
+<!-- =============================== IIS SECTION =============================== -->
+<div id="iis" class="section">
+
+  <!-- PART 1 -->
+  <div class="part"><span class="part-num">PART 1</span><h2>Create Instance</h2></div>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-content">Go to <strong>AWS → EC2 → Launch Instance</strong></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-content">
+      Fill in:
+      <ul style="margin-top:8px;padding-left:20px;color:var(--muted);font-size:14px;line-height:2">
+        <li><strong>Name</strong> → <code>Week5-Server</code></li>
+        <li><strong>OS</strong> → Microsoft Windows Server</li>
+        <li><strong>Instance type</strong> → <code>t3.micro</code></li>
+        <li><strong>Key pair</strong> → create / download</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <!-- PART 2 -->
+  <div class="part"><span class="part-num">PART 2</span><h2>Security Group</h2></div>
+  <div class="warn-block">⚠️ VERY IMPORTANT — you must allow both of these ports:</div>
+  <table>
+    <tr><th>Type</th><th>Port</th><th>Source</th></tr>
+    <tr><td class="tag-blue">RDP</td><td>3389</td><td>0.0.0.0/0</td></tr>
+    <tr><td class="tag-green">HTTP</td><td>80</td><td>0.0.0.0/0</td></tr>
+  </table>
+
+  <!-- PART 3 -->
+  <div class="part"><span class="part-num">PART 3</span><h2>Launch &amp; Wait</h2></div>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-content">Click <strong>Launch Instance</strong></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-content">Wait for: ✅ <strong>Status = Running</strong> &nbsp;|&nbsp; ✅ <strong>Checks = 2/2 or 3/3</strong></div></div>
+  </div>
+
+  <!-- PART 4 -->
+  <div class="part"><span class="part-num">PART 4</span><h2>Connect via RDP</h2></div>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-content">Select instance → Click <strong>Connect → RDP Client tab</strong></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-content">Click <strong>Download RDP file</strong></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-content">Click <strong>Get Password</strong> → Upload your <code>.pem</code> file → Click <strong>Decrypt Password</strong></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-content">Copy the decrypted password</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-content">Open the <code>.rdp</code> file → Username: <code>Administrator</code> → Paste password</div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-content">✅ Windows desktop opens</div></div>
+  </div>
+
+  <!-- PART 5 -->
+  <div class="part"><span class="part-num">PART 5</span><h2>Install IIS</h2></div>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-content">Open <strong>Server Manager</strong></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-content">Click <strong>Add Roles and Features</strong></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-content">Click <strong>Next → Next → Next</strong></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-content">Check ✅ <strong>Web Server (IIS)</strong> → Click <strong>Install</strong></div></div>
+  </div>
+
+  <!-- PART 6 -->
+  <div class="part"><span class="part-num">PART 6</span><h2>Go to Website Folder</h2></div>
+  <p style="margin-bottom:8px;font-size:14px;color:var(--muted);">Open CMD inside Windows and run:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">cmd</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>cd C:\inetpub\wwwroot</pre>
+  </div>
+
+  <!-- PART 7 -->
+  <div class="part"><span class="part-num">PART 7</span><h2>Delete Default Files</h2></div>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">cmd</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>del *.*</pre>
+  </div>
+
+  <!-- PART 8 -->
+  <div class="part"><span class="part-num">PART 8</span><h2>Create Your Page</h2></div>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">cmd</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>echo ^&lt;h1^&gt;Week 5 IIS Server Working 🚀^&lt;/h1^&gt; > index.html</pre>
+  </div>
+
+  <!-- PART 9 -->
+  <div class="part"><span class="part-num">PART 9</span><h2>Restart IIS</h2></div>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">cmd</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>iisreset</pre>
+  </div>
+
+  <!-- PART 10 -->
+  <div class="part"><span class="part-num">PART 10</span><h2>Check Security Group</h2></div>
+  <p style="margin-bottom:8px;font-size:14px;color:var(--muted);">Go to AWS → Instance → Security Group → Inbound rules. Verify:</p>
+  <table>
+    <tr><th>Type</th><th>Port</th><th>Source</th></tr>
+    <tr><td class="tag-green">HTTP</td><td>80</td><td>0.0.0.0/0</td></tr>
+  </table>
+
+  <!-- PART 11 -->
+  <div class="part"><span class="part-num">PART 11</span><h2>Get Public IP</h2></div>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-content">Go to <strong>EC2 → Instances</strong></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-content">Copy <strong>Public IPv4 address</strong> (e.g., <code>3.84.212.177</code>)</div></div>
+  </div>
+
+  <!-- PART 12 -->
+  <div class="part"><span class="part-num">PART 12</span><h2>Open Website</h2></div>
+  <p style="margin-bottom:8px;font-size:14px;color:var(--muted);">On your laptop browser, open:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">url</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>http://&lt;your-public-ip&gt;</pre>
+  </div>
+
+  <div class="result-box">✅ Final Result: &nbsp; Week 5 IIS Server Working 🚀</div>
+
+  <hr/>
+
+  <!-- ERRORS -->
+  <div class="part"><span class="part-num">⚠️</span><h2>Common Errors &amp; Fixes</h2></div>
+
+  <div class="error-card">
+    <div class="error-title">❌ Site not opening</div>
+    <div class="error-body">
+      Check all three causes:
+      <ul style="margin-top:8px;padding-left:20px;line-height:2;font-size:13px">
+        <li>Port 80 not open in Security Group</li>
+        <li>IIS not restarted — run <code>iisreset</code></li>
+        <li>Wrong IP — use <strong>Public IPv4</strong>, not Private</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="error-card">
+    <div class="error-title">❌ Page takes too long to respond</div>
+    <div class="error-body">Wait <strong>1–2 minutes</strong> after setup before trying to open the site.</div>
+  </div>
+
+  <hr/>
+
+  <!-- CURL VERIFY -->
+  <div class="part"><span class="part-num">BONUS</span><h2>Verify via curl (from your PC)</h2></div>
+  <p style="margin-bottom:8px;font-size:14px;color:var(--muted);">Open <strong>Command Prompt on your laptop</strong> and run:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">cmd</span><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+    <pre>curl http://&lt;your-public-ip&gt;</pre>
+  </div>
+  <div class="note">Example output you should see: <code>&lt;h1&gt; hello &lt;/h1&gt;</code> — confirms your IIS server is serving content correctly.</div>
+
+  <hr/>
+
+  <!-- MEMORY TRICK -->
+  <div class="part"><span class="part-num">🧠</span><h2>Memory Trick</h2></div>
+  <div class="memory">EC2 &nbsp;→&nbsp; RDP &nbsp;→&nbsp; IIS &nbsp;→&nbsp; HTML &nbsp;→&nbsp; IP</div>
+
+</div><!-- end iis section -->
+</div><!-- container -->
+
+<script>
+  function switchTab(id, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✓ Copied';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '⎘ Copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+</script>
 
----
-
-# 🔹 PART 6 – CREATE WEBPAGE
-
-```bash
-nano index.html
-```
-
-Paste:
-
-```html
-<h1>Docker Working on AWS 🚀</h1>
-```
-
-Save:
-👉 Ctrl + X → Y → Enter
-
----
-
-# 🔹 PART 7 – RUN DOCKER
-
-Pull Apache:
-
-```bash
-docker pull httpd
-```
-
-Run container:
-
-```bash
-docker run -d -p 80:80 -v $(pwd):/usr/local/apache2/htdocs/ httpd
-```
-
----
-
-# 🔹 PART 8 – VERIFY
-
-```bash
-docker ps
-```
-
-👉 You should see running container
-
----
-
-# 🔹 PART 9 – GET IP
-
-Go to:
-👉 EC2 → Instances
-
-Copy:
-👉 **Public IPv4 address**
-
-Example:
-
-```
-100.24.58.31
-```
-
----
-
-# 🔹 PART 10 – OPEN WEBSITE
-
-Open browser:
-
-```
-http://<your-public-ip>
-```
-
-👉 Example:
-
-```
-http://100.24.58.31
-```
-
----
-
-# ✅ FINAL RESULT
-
-You should see:
-
-```
-Docker Working on AWS 🚀
-```
-
----
-
-# ⚠️ COMMON ERRORS (VERY USEFUL)
-
-### ❌ apt not found
-
-👉 Use `dnf` (Amazon Linux)
-
----
-
-### ❌ Site not opening
-
-👉 Check:
-
-* Security group → HTTP port 80 open
-
----
-
-### ❌ Docker permission denied
-
-👉 Run:
-
-```
-sudo usermod -aG docker ec2-user
-exit
-```
-
----
-
-### ❌ Wrong IP
-
-👉 Always use:
-✔ Public IPv4
-❌ Private IP
-
----
-
-
-docker ps -a
-docker rm -f <container_id>
-docker run -d -p 80:80 -v $(pwd):/usr/local/apache2/htdocs/ httpd
-
-
-or  
-
-docker ps -a
-docker rm -f $(docker ps -aq)   
-
-
-
-# 🚀 WEEK 5 (WINDOWS + IIS) — FULL EXECUTION GUIDE
-
----
-
-# 🔹 PART 1 – CREATE INSTANCE
-
-1. Go to AWS → EC2
-2. Click **Launch Instance**
-
-Fill:
-
-* Name → `Week5-Server`
-* OS → **Microsoft Windows Server**
-* Instance type → `t3.micro` (✔ fine)
-* Key pair → create/download
-
----
-
-# 🔹 PART 2 – SECURITY GROUP
-
-👉 VERY IMPORTANT
-
-Allow:
-
-* RDP → port 3389
-* HTTP → port 80 ✅
-
----
-
-# 🔹 PART 3 – LAUNCH
-
-👉 Click **Launch Instance**
-
-Wait:
-✔ Status = Running
-✔ Checks = 2/2 or 3/3
-
----
-
-# 🔹 PART 4 – CONNECT (RDP)
-
-1. Select instance
-2. Click **Connect**
-3. Go to **RDP Client tab**
-
----
-
-## 👉 Then:
-
-1. Click **Download RDP file**
-2. Click **Get Password**
-3. Upload `.pem`
-4. Click **Decrypt Password**
-5. Copy password
-
----
-
-## 👉 Open RDP:
-
-1. Open `.rdp` file
-2. Username:
-
-```plaintext
-Administrator
-```
-
-3. Paste password
-
-👉 Now Windows opens
-
----
-
-# 🔹 PART 5 – INSTALL IIS
-
-Inside Windows:
-
-1. Open **Server Manager**
-2. Click:
-   👉 Add Roles and Features
-
----
-
-## Follow:
-
-* Next → Next → Next
-* Select:
-  ✔ **Web Server (IIS)**
-* Install
-
----
-
-# 🔹 PART 6 – GO TO WEBSITE FOLDER
-
-Open CMD and run:
-
-```cmd
-cd C:\inetpub\wwwroot
-```
-
----
-
-# 🔹 PART 7 – DELETE DEFAULT FILES
-
-```cmd
-del *.*
-```
-
----
-
-# 🔹 PART 8 – CREATE YOUR PAGE
-
-```cmd
-echo ^<h1^>Week 5 IIS Server Working 🚀^</h1^> > index.html
-```
-
----
-
-# 🔹 PART 9 – RESTART IIS
-
-```cmd
-iisreset
-```
-
----
-
-# 🔹 PART 10 – CHECK SECURITY GROUP
-
-👉 Go to AWS:
-
-* Instance → Security group
-* Inbound rules → check:
-
-| Type | Port | Source    |
-| ---- | ---- | --------- |
-| HTTP | 80   | 0.0.0.0/0 |
-
----
-
-# 🔹 PART 11 – GET IP
-
-👉 EC2 → Instances
-
-Copy:
-👉 Public IPv4
-
-Example:
-
-```plaintext
-3.84.212.177
-```
-
----
-
-# 🔹 PART 12 – OPEN WEBSITE
-
-👉 On YOUR LAPTOP browser:
-
-```plaintext
-http://<your-ip>
-```
-
-Example:
-
-```plaintext
-http://3.84.212.177
-```
-
----
-
-# ✅ FINAL OUTPUT
-
-```
-Week 5 IIS Server Working 🚀
-```
-
----
-
-# ⚠️ COMMON ERRORS (YOU FACED ONE)
-
-### ❌ Site not opening
-
-👉 Causes:
-
-* Port 80 not open
-* IIS not restarted
-* Wrong IP
-
----
-
-### ❌ Takes too long to respond
-
-👉 Wait 1–2 mins after setup
-
----
-
-# 🧠 SIMPLE MEMORY TRICK
-
-👉 Just remember:
-
-**EC2 → RDP → IIS → HTML → IP**
-
-
-C:\Users\charm>curl http://98.93.222.33
-<h1> hello </h1>
-
-
-
-
-    
 </body>
 </html>
