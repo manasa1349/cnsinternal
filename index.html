@@ -5,213 +5,441 @@
 </head>
 <body>
 
-<h1>🚀 DOCKER ON AWS – FULL EXECUTION GUIDE</h1>
 
-<h2>🔹 PART 1 – CREATE INSTANCE</h2>
-<p>Go to AWS → EC2 → Launch Instance</p>
-<ul>
-<li>Name → docker-lab</li>
-<li>OS → Amazon Linux / Ubuntu</li>
-<li>Instance → t2.micro</li>
-<li>Key pair → create/download</li>
-</ul>
+Perfect — this is exactly what you need 👍
+I’ll give you a **clean, repeatable execution guide** (no theory, just doing).
 
-<h2>🔹 PART 2 – SECURITY SETTINGS</h2>
-<ul>
-<li>SSH → port 22</li>
-<li>HTTP → port 80</li>
-</ul>
+👉 You can follow this anytime and it will work.
 
-<h2>🔹 PART 3 – LAUNCH & CONNECT</h2>
-<p>Use EC2 Instance Connect</p>
+---
 
-<h2>🔹 PART 4 – INSTALL DOCKER</h2>
-<pre>
+# 🚀 DOCKER ON AWS – FULL EXECUTION GUIDE (STEP-BY-STEP)
+
+---
+
+# 🔹 PART 1 – CREATE INSTANCE
+
+1. Go to **AWS → EC2**
+2. Click **Launch Instance**
+
+Set:
+
+* Name → anything (e.g., docker-lab)
+* OS → **Amazon Linux (or Ubuntu)**
+* Instance type → `t2.micro`
+* Key pair → create/download
+
+---
+
+# 🔹 PART 2 – SECURITY SETTINGS
+
+In **Network settings → Security group**:
+
+Add:
+
+* SSH → port 22 (default)
+* HTTP → port 80 (IMPORTANT)
+
+If missed:
+👉 Later → Security Groups → Edit inbound rules → add HTTP (80)
+
+---
+
+# 🔹 PART 3 – LAUNCH & CONNECT
+
+1. Click **Launch Instance**
+2. Go to **Instances**
+3. Select instance
+4. Click **Connect**
+5. Use:
+   👉 **EC2 Instance Connect**
+6. Click **Connect**
+
+👉 Terminal opens
+
+---
+
+# 🔹 PART 4 – INSTALL DOCKER (AMAZON LINUX)
+
+```bash
 sudo dnf update -y
 sudo dnf install docker -y
+```
+
+Start docker:
+
+```bash
 sudo systemctl start docker
 sudo systemctl enable docker
-sudo usermod -aG docker ec2-user
-exit
-</pre>
+```
 
-<h2>🔹 PART 5 – CREATE PROJECT</h2>
-<pre>
+Give permission:
+
+```bash
+sudo usermod -aG docker ec2-user
+```
+
+Then:
+
+```bash
+exit
+```
+
+👉 Reconnect again
+
+---
+
+# 🔹 PART 5 – CREATE PROJECT
+
+```bash
 cd ~
 mkdir docker-project
 cd docker-project
-</pre>
+```
 
-<h2>🔹 PART 6 – CREATE WEBPAGE</h2>
-<pre>
+---
+
+# 🔹 PART 6 – CREATE WEBPAGE
+
+```bash
 nano index.html
-</pre>
+```
 
-<p>&lt;h1&gt;Docker Working on AWS 🚀&lt;/h1&gt;</p>
+Paste:
 
-<h2>🔹 PART 7 – RUN DOCKER</h2>
-<pre>
+```html
+<h1>Docker Working on AWS 🚀</h1>
+```
+
+Save:
+👉 Ctrl + X → Y → Enter
+
+---
+
+# 🔹 PART 7 – RUN DOCKER
+
+Pull Apache:
+
+```bash
 docker pull httpd
-docker run -d -p 80:80 -v $(pwd):/usr/local/apache2/htdocs/ httpd
-</pre>
+```
 
-<h2>🔹 PART 8 – VERIFY</h2>
-<pre>
+Run container:
+
+```bash
+docker run -d -p 80:80 -v $(pwd):/usr/local/apache2/htdocs/ httpd
+```
+
+---
+
+# 🔹 PART 8 – VERIFY
+
+```bash
 docker ps
-</pre>
+```
 
-<h2>🔹 PART 9 – ACCESS WEBSITE</h2>
-<p>http://your-public-ip</p>
+👉 You should see running container
 
-<h2>⚠️ COMMON ERRORS</h2>
-<ul>
-<li>apt not found → use dnf</li>
-<li>Port 80 not open</li>
-<li>Wrong IP</li>
-</ul>
+---
 
-<h2>🔹 EXTRA COMMANDS</h2>
-<pre>
+# 🔹 PART 9 – GET IP
+
+Go to:
+👉 EC2 → Instances
+
+Copy:
+👉 **Public IPv4 address**
+
+Example:
+
+```
+100.24.58.31
+```
+
+---
+
+# 🔹 PART 10 – OPEN WEBSITE
+
+Open browser:
+
+```
+http://<your-public-ip>
+```
+
+👉 Example:
+
+```
+http://100.24.58.31
+```
+
+---
+
+# ✅ FINAL RESULT
+
+You should see:
+
+```
+Docker Working on AWS 🚀
+```
+
+---
+
+# ⚠️ COMMON ERRORS (VERY USEFUL)
+
+### ❌ apt not found
+
+👉 Use `dnf` (Amazon Linux)
+
+---
+
+### ❌ Site not opening
+
+👉 Check:
+
+* Security group → HTTP port 80 open
+
+---
+
+### ❌ Docker permission denied
+
+👉 Run:
+
+```
+sudo usermod -aG docker ec2-user
+exit
+```
+
+---
+
+### ❌ Wrong IP
+
+👉 Always use:
+✔ Public IPv4
+❌ Private IP
+
+---
+
+
 docker ps -a
-docker rm -f &lt;container_id&gt;
-
-docker ps -a
-docker rm -f $(docker ps -aq)
+docker rm -f <container_id>
 docker run -d -p 80:80 -v $(pwd):/usr/local/apache2/htdocs/ httpd
-</pre>
 
 
-<hr>
+or  
 
-<h1>🚀 WEEK 5 (WINDOWS + IIS) — FULL EXECUTION GUIDE</h1>
+docker ps -a
+docker rm -f $(docker ps -aq)   
 
-<p><b>This is your personal checklist (use anytime)</b></p>
 
-<hr>
 
-<h2>🔹 PART 1 – CREATE INSTANCE</h2>
-<ol>
-<li>Go to AWS → EC2</li>
-<li>Click Launch Instance</li>
-</ol>
+# 🚀 WEEK 5 (WINDOWS + IIS) — FULL EXECUTION GUIDE
 
-<ul>
-<li>Name → Week5-Server</li>
-<li>OS → Microsoft Windows Server</li>
-<li>Instance → t3.micro</li>
-<li>Key pair → create/download</li>
-</ul>
+---
 
-<hr>
+# 🔹 PART 1 – CREATE INSTANCE
 
-<h2>🔹 PART 2 – SECURITY GROUP</h2>
-<ul>
-<li>RDP → port 3389</li>
-<li>HTTP → port 80</li>
-</ul>
+1. Go to AWS → EC2
+2. Click **Launch Instance**
 
-<hr>
+Fill:
 
-<h2>🔹 PART 3 – LAUNCH</h2>
-<ul>
-<li>Status = Running</li>
-<li>Checks = 2/2 or 3/3</li>
-</ul>
+* Name → `Week5-Server`
+* OS → **Microsoft Windows Server**
+* Instance type → `t3.micro` (✔ fine)
+* Key pair → create/download
 
-<hr>
+---
 
-<h2>🔹 PART 4 – CONNECT (RDP)</h2>
-<ol>
-<li>Select instance</li>
-<li>Click Connect</li>
-<li>Go to RDP Client tab</li>
-</ol>
+# 🔹 PART 2 – SECURITY GROUP
 
-<ol>
-<li>Download RDP file</li>
-<li>Get Password</li>
-<li>Upload .pem</li>
-<li>Decrypt Password</li>
-<li>Copy password</li>
-</ol>
+👉 VERY IMPORTANT
 
-<pre>
-Username: Administrator
-</pre>
+Allow:
 
-<hr>
+* RDP → port 3389
+* HTTP → port 80 ✅
 
-<h2>🔹 PART 5 – INSTALL IIS</h2>
-<ol>
-<li>Open Server Manager</li>
-<li>Add Roles and Features</li>
-<li>Select Web Server (IIS)</li>
-</ol>
+---
 
-<hr>
+# 🔹 PART 3 – LAUNCH
 
-<h2>🔹 PART 6 – GO TO WEBSITE FOLDER</h2>
-<pre>
+👉 Click **Launch Instance**
+
+Wait:
+✔ Status = Running
+✔ Checks = 2/2 or 3/3
+
+---
+
+# 🔹 PART 4 – CONNECT (RDP)
+
+1. Select instance
+2. Click **Connect**
+3. Go to **RDP Client tab**
+
+---
+
+## 👉 Then:
+
+1. Click **Download RDP file**
+2. Click **Get Password**
+3. Upload `.pem`
+4. Click **Decrypt Password**
+5. Copy password
+
+---
+
+## 👉 Open RDP:
+
+1. Open `.rdp` file
+2. Username:
+
+```plaintext
+Administrator
+```
+
+3. Paste password
+
+👉 Now Windows opens
+
+---
+
+# 🔹 PART 5 – INSTALL IIS
+
+Inside Windows:
+
+1. Open **Server Manager**
+2. Click:
+   👉 Add Roles and Features
+
+---
+
+## Follow:
+
+* Next → Next → Next
+* Select:
+  ✔ **Web Server (IIS)**
+* Install
+
+---
+
+# 🔹 PART 6 – GO TO WEBSITE FOLDER
+
+Open CMD and run:
+
+```cmd
 cd C:\inetpub\wwwroot
-</pre>
+```
 
-<hr>
+---
 
-<h2>🔹 PART 7 – DELETE DEFAULT FILES</h2>
-<pre>
+# 🔹 PART 7 – DELETE DEFAULT FILES
+
+```cmd
 del *.*
-</pre>
+```
 
-<hr>
+---
 
-<h2>🔹 PART 8 – CREATE YOUR PAGE</h2>
-<pre>
+# 🔹 PART 8 – CREATE YOUR PAGE
+
+```cmd
 echo ^<h1^>Week 5 IIS Server Working 🚀^</h1^> > index.html
-</pre>
+```
 
-<hr>
+---
 
-<h2>🔹 PART 9 – RESTART IIS</h2>
-<pre>
+# 🔹 PART 9 – RESTART IIS
+
+```cmd
 iisreset
-</pre>
+```
 
-<hr>
+---
 
-<h2>🔹 PART 10 – CHECK SECURITY GROUP</h2>
-<table border="1">
-<tr><th>Type</th><th>Port</th><th>Source</th></tr>
-<tr><td>HTTP</td><td>80</td><td>0.0.0.0/0</td></tr>
-</table>
+# 🔹 PART 10 – CHECK SECURITY GROUP
 
-<hr>
+👉 Go to AWS:
 
-<h2>🔹 PART 11 – GET IP</h2>
-<p>Go to EC2 → Instances → Copy Public IPv4</p>
+* Instance → Security group
+* Inbound rules → check:
 
-<pre>
-http://your-public-ip
-</pre>
+| Type | Port | Source    |
+| ---- | ---- | --------- |
+| HTTP | 80   | 0.0.0.0/0 |
 
-<hr>
+---
 
-<h2>🔹 FINAL OUTPUT</h2>
-<pre>
+# 🔹 PART 11 – GET IP
+
+👉 EC2 → Instances
+
+Copy:
+👉 Public IPv4
+
+Example:
+
+```plaintext
+3.84.212.177
+```
+
+---
+
+# 🔹 PART 12 – OPEN WEBSITE
+
+👉 On YOUR LAPTOP browser:
+
+```plaintext
+http://<your-ip>
+```
+
+Example:
+
+```plaintext
+http://3.84.212.177
+```
+
+---
+
+# ✅ FINAL OUTPUT
+
+```
 Week 5 IIS Server Working 🚀
-</pre>
+```
 
-<hr>
+---
 
-<h2>⚠️ COMMON ERRORS</h2>
-<ul>
-<li>Port 80 not open</li>
-<li>IIS not restarted</li>
-<li>Wrong IP</li>
-</ul>
+# ⚠️ COMMON ERRORS (YOU FACED ONE)
 
-<hr>
+### ❌ Site not opening
 
-<h2>🧠 MEMORY TRICK</h2>
-<p><b>EC2 → RDP → IIS → HTML → IP</b></p> 
+👉 Causes:
+
+* Port 80 not open
+* IIS not restarted
+* Wrong IP
+
+---
+
+### ❌ Takes too long to respond
+
+👉 Wait 1–2 mins after setup
+
+---
+
+# 🧠 SIMPLE MEMORY TRICK
+
+👉 Just remember:
+
+**EC2 → RDP → IIS → HTML → IP**
+
+
+C:\Users\charm>curl http://98.93.222.33
+<h1> hello </h1>
+
+
+
+
+    
 </body>
 </html>
